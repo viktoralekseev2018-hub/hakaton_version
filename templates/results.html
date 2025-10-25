@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="text-center mb-4 text-white">☄️ Orbital Calculation Results</h1>
+
+        <div class="alert alert-info">
+            <strong>Based on {{ observations_count }} observations</strong>
+            {% set photo_count = observations|selectattr("image_filename")|list|length %}
+            {% if photo_count > 0 %}
+            including {{ photo_count }} with photos 📸
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- График орбиты -->
+{% if orbit_plot %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4>📈 Orbit Visualization</h4>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ orbit_plot }}" alt="Orbit Diagram" class="img-fluid" style="max-width: 100%; border-radius: 10px;">
+                <div class="mt-3">
+                    <small class="text-muted">
+                        Left: Orbital diagram showing comet's path around the Sun<br>
+                        Right: Sky motion based on your observations
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4>🛰️ Orbital Elements</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <tr>
+                        <th>Semi-major Axis:</th>
+                        <td>{{ "%.4f"|format(orbit_elements.a) }} AU</td>
+                    </tr>
+                    <tr>
+                        <th>Eccentricity:</th>
+                        <td>{{ "%.4f"|format(orbit_elements.e) }}</td>
+                    </tr>
+                    <tr>
+                        <th>Inclination:</th>
+                        <td>{{ "%.2f"|format(orbit_elements.i) }}°</td>
+                    </tr>
+                    <tr>
+                        <th>RA of Ascending Node:</th>
+                        <td>{{ "%.2f"|format(orbit_elements.raan) }}°</td>
+                    </tr>
+                    <tr>
+                        <th>Argument of Perihelion:</th>
+                        <td>{{ "%.2f"|format(orbit_elements.arg_peri) }}°</td>
+                    </tr>
+                    <tr>
+                        <th>Orbital Period:</th>
+                        <td>{{ "%.1f"|format(orbit_elements.a ** 1.5 * 365.25) }} days</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header
+                {% if close_approach.distance_au < 0.1 %}bg-danger
+                {% elif close_approach.distance_au < 0.5 %}bg-warning
+                {% else %}bg-success{% endif %} text-white">
+                <h4>🌍 Close Approach with Earth</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <tr>
+                        <th>Date & Time:</th>
+                        <td><strong>{{ close_approach.time }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Distance:</th>
+                        <td>
+                            <strong>{{ "%.6f"|format(close_approach.distance_au) }} AU</strong><br>
+                            <small class="text-muted">{{ "%.2f"|format(close_approach.distance_au * 149597870.7) }} km</small>
+                        </td>
+                    </tr>
+                </table>
+
+                {% if close_approach.distance_au < 0.1 %}
+                <div class="alert alert-danger mt-3">
+                    <h5>🚨 EXTREME CLOSE APPROACH WARNING!</h5>
+                    <p class="mb-0">This comet will pass very close to Earth! Further analysis required.</p>
+                </div>
+                {% elif close_approach.distance_au < 0.5 %}
+                <div class="alert alert-warning mt-3">
+                    <h5>⚠️ Close Approach Alert</h5>
+                    <p class="mb-0">This comet will pass relatively close to Earth. Monitor closely.</p>
+                </div>
+                {% else %}
+                <div class="alert alert-success mt-3">
+                    <h5>✅ Safe Distance</h5>
+                    <p class="mb-0">The comet will pass at a safe distance from Earth.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Детали наблюдений -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>📋 Observation Details</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Time (UTC)</th>
+                                <th>RA (hours)</th>
+                                <th>Dec (degrees)</th>
+                                <th>Image</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for obs in observations %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ obs.observation_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ "%.6f"|format(obs.ra_hours) }}</td>
+                                <td>{{ "%.6f"|format(obs.dec_degrees) }}</td>
+                                <td>
+                                    {% if obs.image_filename %}
+                                    <a href="{{ url_for('static', filename='uploads/' + obs.image_filename) }}"
+                                       target="_blank" class="btn btn-sm btn-outline-primary">
+                                        View
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Observation Gallery -->
+{% set photos = observations|selectattr("image_filename")|list %}
+{% if photos %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>📸 Observation Photos</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for obs in photos %}
+                    <div class="col-md-3 mb-3">
+                        <div class="card h-100">
+                            <img src="{{ url_for('static', filename='uploads/' + obs.image_filename) }}"
+                                 class="card-img-top" alt="Comet observation"
+                                 style="height: 150px; object-fit: cover;">
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <small>
+                                        <strong>RA:</strong> {{ "%.4f"|format(obs.ra_hours) }}h<br>
+                                        <strong>Dec:</strong> {{ "%.4f"|format(obs.dec_degrees) }}°<br>
+                                        <strong>Time:</strong> {{ obs.observation_time.strftime('%m/%d %H:%M') }}
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="/observations" class="btn btn-primary btn-lg me-2">
+            ➕ Add More Observations
+        </a>
+        <a href="/" class="btn btn-secondary btn-lg">
+            🏠 Back to Home
+        </a>
+        <button onclick="window.print()" class="btn btn-success btn-lg ms-2">
+            🖨️ Print Report
+        </button>
+    </div>
+</div>
+{% endblock %}

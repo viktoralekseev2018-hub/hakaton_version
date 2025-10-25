@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>Add Observation</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Right Ascension (hours)</label>
+                        <input type="number" step="0.0001" class="form-control" name="ra_hours"
+                               min="0" max="24" required placeholder="12.3456"
+                               value="{{ request.form.ra_hours or '' }}">
+                        <div class="form-text">0 to 24 hours (e.g., 12.3456)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Declination (degrees)</label>
+                        <input type="number" step="0.0001" class="form-control" name="dec_degrees"
+                               min="-90" max="90" required placeholder="-45.6789"
+                               value="{{ request.form.dec_degrees or '' }}">
+                        <div class="form-text">-90 to +90 degrees (e.g., -45.6789)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Observation Time (UTC)</label>
+                        <input type="datetime-local" class="form-control" name="observation_time" required
+                               value="{{ request.form.observation_time or '' }}">
+                        <div class="form-text">Date and time of observation in UTC</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Comet Image (Optional)</label>
+                        <input type="file" class="form-control" name="comet_image" accept="image/*">
+                        <div class="form-text">Upload a photo of the comet (PNG, JPG, JPEG, GIF, BMP, TIFF)</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        📝 Add Observation
+                    </button>
+                </form>
+
+                {% if observations %}
+                <div class="mt-3">
+                    <form method="POST" action="{{ url_for('clear_observations') }}"
+                          onsubmit="return confirm('Are you sure you want to clear all observations and images?')">
+                        <button type="submit" class="btn btn-danger w-100">
+                            🗑️ Clear All Observations
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>Observations ({{ observations|length }})</h4>
+            </div>
+            <div class="card-body">
+                {% if not observations %}
+                <div class="alert alert-info">
+                    <strong>No observations yet.</strong><br>
+                    Add at least 3 observations to calculate an orbit.
+                </div>
+                {% else %}
+                <div class="list-group" style="max-height: 500px; overflow-y: auto;">
+                    {% for obs in observations %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                RA: <strong>{{ "%.4f"|format(obs.ra_hours) }}h</strong> |
+                                Dec: <strong>{{ "%.4f"|format(obs.dec_degrees) }}°</strong>
+                            </h6>
+                            <small class="text-muted">{{ obs.observation_time.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        {% if obs.image_filename %}
+                        <div class="mt-2">
+                            <small class="text-success">
+                                📸 <strong>Image:</strong>
+                                <a href="{{ url_for('static', filename='uploads/' + obs.image_filename) }}"
+                                   target="_blank" class="text-decoration-none">
+                                    View Photo
+                                </a>
+                            </small>
+                            <br>
+                            <img src="{{ url_for('static', filename='uploads/' + obs.image_filename) }}"
+                                 alt="Comet observation" class="img-thumbnail mt-1"
+                                 style="max-height: 80px; max-width: 120px;">
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if observations|length >= 3 %}
+                <div class="mt-3">
+                    <a href="/calculate_orbit" class="btn btn-success btn-lg w-100">
+                        🚀 Calculate Orbit & Close Approach
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-warning mt-3 text-center">
+                    <strong>Need {{ 3 - observations|length }} more observation(s)</strong><br>
+                    to calculate orbit
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
