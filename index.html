@@ -1,23 +1,39 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comet Tracker | Хакатон</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f0f0f0;
-        }
-        h1 {
-            color: #333;
-        }
-    </style>
-</head>
-<body>
-    <h1>Comet Tracker | Хакатон</h1>
-    <p>Устройство для отслеживания комет</p>
-    <p>Сайт находится в разработке...</p>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto text-center">
+        <h1 class="mb-4 text-white">☄️ Comet Orbit Calculator</h1>
+        <p class="lead text-white">Calculate when the comet will approach Earth!</p>
+
+        <div class="card mt-5">
+            <div class="card-body">
+                <h5 class="card-title">How it works</h5>
+                <ol class="text-start">
+                    <li>Add multiple observations of the comet (RA/Dec coordinates + time)</li>
+                    <li>Upload photos of your observations (optional)</li>
+                    <li>Calculate the orbital elements</li>
+                    <li>Predict close approach with Earth</li>
+                </ol>
+
+                <div class="mt-4">
+                    <a href="/observations" class="btn btn-primary btn-lg">
+                        Start Adding Observations
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">About the Project</h5>
+                <p class="card-text">
+                    Inspired by the movie "Don't Look Up", this application helps astronomers
+                    and enthusiasts track comets and calculate their orbits to predict potential
+                    close approaches with Earth.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
